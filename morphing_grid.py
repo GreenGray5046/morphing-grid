@@ -1,5 +1,8 @@
 """
-morphing_grid.py.
+morphing_grid.py
+
+A tiny Python library to render conformal maps of complex functions with
+smooth, delightful animations of morphing grids.
 
 Dependencies: numpy, matplotlib
 
