@@ -6,10 +6,20 @@ from typing import Callable, Tuple, Optional, List
 
 import numpy as np
 import matplotlib.pyplot as plt
+import sympy as sp
+z = sp.symbols('z')
+
 from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter
 
 ComplexFunc = Callable[[np.ndarray], np.ndarray]
 
+# ----------------------------------- Font ---------------------------------- #
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12
+plt.rcParams['font.weight'] = 'bold'
+plt.rcParams['mathtext.fontset'] = 'cm'
+plt.rcParams['text.usetex'] = False
 
 # ----------------------------- Utility helpers ----------------------------- #
 
@@ -25,7 +35,7 @@ def _sanitize(Z: np.ndarray, clip: float = 1e6) -> np.ndarray:
 
 
 def _ease(t: float, kind: str = "ease_in_out_quad") -> float:
-    """Easing functions to make the morph feel delightful."""
+    """Easing functions"""
     t = float(np.clip(t, 0.0, 1.0))
     if kind == "linear":
         return t
@@ -44,8 +54,10 @@ def _ease(t: float, kind: str = "ease_in_out_quad") -> float:
 @dataclass
 class ConformalAnimator:
     f: ComplexFunc
+    latex_title: str
     domain: Tuple[float, float, float, float] = (-2.0, 2.0, -2.0, 2.0)
     grid_steps: int = 21
+    line_resolution: int = 200
     grid_width: float = 1.5
     grid_alpha: float = 0.9
     grid_color: Optional[str] = None  # None → use matplotlib cycle
@@ -71,12 +83,17 @@ class ConformalAnimator:
     # --------------------------- Grid Construction ------------------------ #
     def _build_grid(self) -> None:
         x0, x1, y0, y1 = self.domain
-        xs = np.linspace(x0, x1, self.grid_steps)
-        ys = np.linspace(y0, y1, self.grid_steps)
+
+        xs = np.linspace(x0, x1, self.line_resolution)
+        ys = np.linspace(y0, y1, self.line_resolution)
+
+        xs_grid_lines = np.linspace(x0, x1, self.grid_steps)
+        ys_grid_lines = np.linspace(y0, y1, self.grid_steps)
+
         # Horizontal lines: y fixed, x varies
-        self._grid_h = [xs + 1j * y for y in ys]
+        self._grid_h = [xs + 1j * y for y in ys_grid_lines]
         # Vertical lines: x fixed, y varies
-        self._grid_v = [x + 1j * ys for x in xs]
+        self._grid_v = [x + 1j * ys for x in xs_grid_lines]
 
     def _apply(self, Z: np.ndarray) -> np.ndarray:
         try:
@@ -118,7 +135,9 @@ class ConformalAnimator:
             lv, = ax.plot(v.real, v.imag, lw=self.grid_width, alpha=self.grid_alpha,
                           color=self.grid_color)
             lines_v.append(lv)
-        ax.set_title("Conformal Grid Morph")
+        
+        # The title can now use LaTeX for rendering.
+        ax.set_title(self.latex_title.replace('\\\\', '\\'))
 
         def init():
             return [*lines_h, *lines_v]
@@ -164,18 +183,25 @@ class ConformalAnimator:
 # ------------------------------- Convenience ------------------------------- #
 
 def demo():
-    """Run a quick demo with a few classic conformal maps."""
     import numpy as np
-    examples: List[Tuple[str, ComplexFunc]] = [
-       # ("exp", lambda z: np.exp(z)),
-       # ("mobius", lambda z: (z - 1) / (z + 1)),
-      #  ("z^2", lambda z: z ** 2),
-        ("sin", lambda z: np.sin(z)),
-      #  ("julia-like", lambda z: z ** 2 + 0.355 + 0.355j),
+
+    examples: List[Tuple[str, ComplexFunc, str]] = [
+       ("z^2", lambda z: z**2, "$f(z) = z^2$"),
+       ("sin", lambda z: np.sin(z), "$f(z) = \\sin(z)$"),
+       ("mobius", lambda z: (z - 1) / (z + 1), "$f(z) = \\frac{z - 1}{z + 1}$"),
     ]
-    for name, f in examples:
-        anim = ConformalAnimator(f, domain=(-2, 2, -2, 2), grid_steps=21, n_frames=150)
+
+    for name, f, latex_title in examples:
+        # Pass the function and LaTeX title directly to the constructor
+        anim = ConformalAnimator(
+            f=f,
+            latex_title=latex_title,
+            domain=(-2, 2, -2, 2),
+            grid_steps=21,
+            n_frames=150,
+        )
         anim.animate_grid(save_path=f"demo_{name}.gif", fps=30)
+      #  anim.animate_grid(show=True, fps=30)
 
 
 __all__ = [
