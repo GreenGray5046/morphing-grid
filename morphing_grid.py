@@ -167,11 +167,11 @@ def demo():
     """Run a quick demo with a few classic conformal maps."""
     import numpy as np
     examples: List[Tuple[str, ComplexFunc]] = [
-        ("exp", lambda z: np.exp(z)),
-        ("mobius", lambda z: (z - 1) / (z + 1)),
-        ("z^2", lambda z: z ** 2),
+       # ("exp", lambda z: np.exp(z)),
+       # ("mobius", lambda z: (z - 1) / (z + 1)),
+      #  ("z^2", lambda z: z ** 2),
         ("sin", lambda z: np.sin(z)),
-        ("julia-like", lambda z: z ** 2 + 0.355 + 0.355j),
+      #  ("julia-like", lambda z: z ** 2 + 0.355 + 0.355j),
     ]
     for name, f in examples:
         anim = ConformalAnimator(f, domain=(-2, 2, -2, 2), grid_steps=21, n_frames=150)
