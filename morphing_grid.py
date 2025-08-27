@@ -1,19 +1,16 @@
 """
-conformal_viz.py
+morphing_grid.py.
 
-A tiny Python library to render conformal maps of complex functions with
-smooth, delightful animations of morphing grids.
-
-Dependencies: numpy, matplotlib, pillow (for GIF), and optionally ffmpeg (for MP4)
+Dependencies: numpy, matplotlib
 
 Quickstart
 ----------
 
 >>> import numpy as np
->>> import conformal_viz as cv
->>> f = lambda z: np.exp(z)  # choose any complex-analytic function
+>>> import morphing_grid as cv
+>>> choose any complex-analytic function
 >>> anim = cv.ConformalAnimator(f, domain=(-2, 2, -2, 2), grid_steps=21)
->>> anim.animate_grid(save_path="exp_grid.gif", fps=30)
+>>> anim.animate_grid(show=True)
 
 """
 from __future__ import annotations
@@ -24,7 +21,7 @@ from typing import Callable, Tuple, Optional, List
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter
+from matplotlib.animation import FuncAnimation
 
 ComplexFunc = Callable[[np.ndarray], np.ndarray]
 
@@ -154,36 +151,19 @@ class ConformalAnimator:
         anim = FuncAnimation(fig, update, init_func=init,
                              frames=self.n_frames, interval=1000 / fps,
                              blit=blit)
-        self._maybe_save(anim, save_path, fps)
         if show:
             plt.show()
-        plt.close(fig)
         return anim
 
-    # ------------------------------ Saving -------------------------------- #
-    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -> None:
-        if not save_path:
-            return
-        ext = save_path.lower().rsplit('.', 1)[-1]
-        if ext in {"gif"}:
-            writer = PillowWriter(fps=fps)
-            anim.save(save_path, writer=writer, dpi=self.dpi)
-        elif ext in {"mp4", "m4v", "mov"}:
-            try:
-                writer = FFMpegWriter(fps=fps)
-                anim.save(save_path, writer=writer, dpi=self.dpi)
-            except Exception as e:
-                warnings.warn(
-                    f"FFmpeg save failed ({e}). Install ffmpeg or save as GIF instead.")
-        else:
-            warnings.warn("Unknown extension. Use .gif or .mp4")
 
-
-# ------------------------------- Convenience ------------------------------- #
+# ------------------------------- Demo ------------------------------- #
 
 def demo():
-    """Run a quick demo with a few classic conformal maps."""
+    """Run a quick demo with a few classic conformal maps and show live windows."""
     import numpy as np
+    import warnings
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
+
     examples: List[Tuple[str, ComplexFunc]] = [
         ("exp", lambda z: np.exp(z)),
         ("mobius", lambda z: (z - 1) / (z + 1)),
@@ -192,8 +172,9 @@ def demo():
         ("julia-like", lambda z: z ** 2 + 0.355 + 0.355j),
     ]
     for name, f in examples:
+        print(f"Showing demo for {name}() ...")
         anim = ConformalAnimator(f, domain=(-2, 2, -2, 2), grid_steps=21, n_frames=150)
-        anim.animate_grid(save_path=f"demo_{name}.gif", fps=30)
+        anim.animate_grid(show=True)
 
 
 __all__ = [
