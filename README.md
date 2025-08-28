@@ -1,0 +1,1 @@
+Simple Python library that lets you easily preview and save animations of conformal grid visualisations of complex analytic functions.
