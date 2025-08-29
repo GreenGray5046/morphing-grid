@@ -1,19 +1,23 @@
+#For generating GIFs of complex functions
+
 import numpy as np
 import morphing_grid as mg
 import mpmath as mp
-import scipy as scp
-import scipy.special as scps
 
 def zeta(z):
     return np.array([complex(mp.zeta(complex(val))) for val in np.ravel(z)]).reshape(z.shape)
 
-# Define the LaTeX title for your  function
-custom_latex_title = "riemann zeta"
+# Define the title for your function (supports LaTeX)
+custom_latex_title = "Riemann Zeta"
+
+# Define a SymPy expression for adaptive resolution and flexibility with updates in the future
+custom_sympy_expr = z ** (sp.exp(sp.I))
 
 # Create an instance of the ConformalAnimator class with your function
 animator = mg.ConformalAnimator(
     f=zeta,
     latex_title=custom_latex_title,
+    sympy_f_expr=custom_sympy_expr,
     domain=(-2, 2, -2, 2),
     grid_steps=25,
     line_resolution=200,
