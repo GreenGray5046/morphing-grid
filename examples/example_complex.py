@@ -29,6 +29,3 @@ animator = mg.ConformalAnimator(
 
 # Show a preview
 animator.animate_grid(show=True, fps=30)
-
-# You can also call the demo function
-# demo()
