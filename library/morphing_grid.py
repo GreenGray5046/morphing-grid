@@ -171,6 +171,24 @@ class ConformalAnimator:
         W = self._apply(Z)
         return (1 - a) * Z + a * W
 
+    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int = 30) -> None:
+        """Helper method to save animation based on file extension"""
+        if not save_path:
+            return
+        ext = save_path.lower().rsplit('.', 1)[-1]
+        if ext in {"gif"}:
+            writer = PillowWriter(fps=fps)
+            anim.save(save_path, writer=writer, dpi=self.dpi)
+        elif ext in {"mp4", "m4v", "mov"}:
+            try:
+                writer = FFMpegWriter(fps=fps)
+                anim.save(save_path, writer=writer, dpi=self.dpi)
+            except Exception as e:
+                warnings.warn(
+                    f"FFmpeg save failed ({e}). Install ffmpeg or save as GIF instead.")
+        else:
+            warnings.warn("Unknown extension. Use .gif or .mp4")
+
     def animate_grid(self, save_path: Optional[str] = None, fps: int = 30,
                      show: bool = False, blit: bool = False) -> FuncAnimation:
         fig, ax = self._setup_axis()
@@ -196,7 +214,7 @@ class ConformalAnimator:
         anim = FuncAnimation(fig, update, init_func=init,
                              frames=self.n_frames, interval=1000 / fps,
                              blit=blit)
-        Save._maybe_save(anim, save_path, fps)
+        self._maybe_save(anim, save_path, fps)
         if show:
             plt.show()
         plt.close(fig)
@@ -263,6 +281,24 @@ class LineAnimator:
         fx = self.f(x)
         return (1 - a) * x + a * fx
 
+    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int = 30) -> None:
+        """Helper method to save animation based on file extension"""
+        if not save_path:
+            return
+        ext = save_path.lower().rsplit('.', 1)[-1]
+        if ext in {"gif"}:
+            writer = PillowWriter(fps=fps)
+            anim.save(save_path, writer=writer, dpi=self.dpi)
+        elif ext in {"mp4", "m4v", "mov"}:
+            try:
+                writer = FFMpegWriter(fps=fps)
+                anim.save(save_path, writer=writer, dpi=self.dpi)
+            except Exception as e:
+                warnings.warn(
+                    f"FFmpeg save failed ({e}). Install ffmpeg or save as GIF instead.")
+        else:
+            warnings.warn("Unknown extension. Use .gif or .mp4")
+
     def animate_line(self, save_path: Optional[str] = None, fps: int = 30,
                     show: bool = False, blit: bool = True) -> FuncAnimation:
         fig, ax = self._setup_axis()
@@ -322,38 +358,12 @@ class LineAnimator:
             init_func=init, blit=blit, interval=1000/fps
         )
         
-        Save._maybe_save(anim, save_path, fps)
+        self._maybe_save(anim, save_path, fps)
         if show:
             plt.show()
         plt.close(fig)
         return anim
-
-
-
-
-# ------------------------------- Saving ------------------------------- #
-
-@dataclass
-class Save:
-
-    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -> None:
-        if not save_path:
-            return
-        ext = save_path.lower().rsplit('.', 1)[-1]
-        if ext in {"gif"}:
-            writer = PillowWriter(fps=fps)
-            anim.save(save_path, writer=writer, dpi=self.dpi)
-        elif ext in {"mp4", "m4v", "mov"}:
-            try:
-                writer = FFMpegWriter(fps=fps)
-                anim.save(save_path, writer=writer, dpi=self.dpi)
-            except Exception as e:
-                warnings.warn(
-                    f"FFmpeg save failed ({e}). Install ffmpeg or save as GIF instead.")
-        else:
-            warnings.warn("Unknown extension. Use .gif or .mp4")
-
-
+    
 __all__ = [
     "ConformalAnimator",
     "LineAnimator",
