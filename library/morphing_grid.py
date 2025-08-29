@@ -196,28 +196,11 @@ class ConformalAnimator:
         anim = FuncAnimation(fig, update, init_func=init,
                              frames=self.n_frames, interval=1000 / fps,
                              blit=blit)
-        self._maybe_save(anim, save_path, fps)
+        Save._maybe_save(anim, save_path, fps)
         if show:
             plt.show()
         plt.close(fig)
         return anim
-
-    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -> None:
-        if not save_path:
-            return
-        ext = save_path.lower().rsplit('.', 1)[-1]
-        if ext in {"gif"}:
-            writer = PillowWriter(fps=fps)
-            anim.save(save_path, writer=writer, dpi=self.dpi)
-        elif ext in {"mp4", "m4v", "mov"}:
-            try:
-                writer = FFMpegWriter(fps=fps)
-                anim.save(save_path, writer=writer, dpi=self.dpi)
-            except Exception as e:
-                warnings.warn(
-                    f"FFmpeg save failed ({e}). Install ffmpeg or save as GIF instead.")
-        else:
-            warnings.warn("Unknown extension. Use .gif or .mp4")
     
 # ------------------------------ Real class ------------------------------ #
     
@@ -339,13 +322,21 @@ class LineAnimator:
             init_func=init, blit=blit, interval=1000/fps
         )
         
-        self._maybe_save(anim, save_path, fps)
+        Save._maybe_save(anim, save_path, fps)
         if show:
             plt.show()
         plt.close(fig)
         return anim
-    
-def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -> None:
+
+
+
+
+# ------------------------------- Saving ------------------------------- #
+
+@dataclass
+class Save:
+
+    def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -> None:
         if not save_path:
             return
         ext = save_path.lower().rsplit('.', 1)[-1]
@@ -363,30 +354,7 @@ def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int) -
             warnings.warn("Unknown extension. Use .gif or .mp4")
 
 
-# ------------------------------- Convenience ------------------------------- #
-
-def demo():
-    import numpy as np
-
-    examples: List[Tuple[str, ComplexFunc, sp.Expr, str]] = [
-       ("z^2", lambda z: z**2, z**2, "$f(z) = z^2$"),
-       ("sin", lambda z: np.sin(z), sp.sin(z), "$f(z) = \\sin(z)$"),
-       ("mobius", lambda z: (z - 1) / (z + 1), (z - 1) / (z + 1), "$f(z) = \\frac{z - 1}{z + 1}$"),
-    ]
-
-    for name, f, sympy_f, latex_title in examples:
-        anim = ConformalAnimator(
-            f=f,
-            sympy_f_expr=sympy_f,
-            latex_title=latex_title,
-            domain=(-2, 2, -2, 2),
-            grid_steps=21,
-            n_frames=150,
-        )
-        anim.animate_grid(save_path=f"demo_{name}.gif", fps=30)
-
-
 __all__ = [
     "ConformalAnimator",
-    "demo",
+    "LineAnimator",
 ]
