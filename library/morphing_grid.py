@@ -9,8 +9,6 @@ from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter
 
 ComplexFunc = Callable[[np.ndarray], np.ndarray]
 
-# --------------------------------- Params ---------------------------------- #
-
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = 'cmr10'
 plt.rcParams["axes.formatter.use_mathtext"] = True
@@ -19,8 +17,6 @@ plt.rcParams['font.weight'] = 'regular'
 plt.rcParams['mathtext.fontset'] = 'cm'
 plt.rcParams['text.usetex'] = False
 plt.rcParams['text.color'] = 'white'
-
-# ----------------------------- Utility helpers ----------------------------- #
 
 def _sanitize(Z: np.ndarray, clip: float = 1e6) -> np.ndarray:
     """Replace non-finite values and clip extremes to keep plots stable."""
@@ -49,25 +45,19 @@ def _ease(t: float, kind: str = "ease_in_out_quad") -> float:
 
 
 def _numerical_derivative(f: ComplexFunc, z: np.ndarray, h: float = 1e-6) -> np.ndarray:
-    """Compute numerical derivative of complex function using central difference."""
     try:
-        # For real-valued functions (LineAnimator)
         if np.all(np.isreal(z)):
             return (f(z + h) - f(z - h)) / (2 * h)
-        
-        # For complex functions (ConformalAnimator)
+    
         fz = f(z)
         if np.all(np.isreal(fz)):
-            # Real-valued function of complex variable
+            
             return (f(z + h) - f(z - h)) / (2 * h)
         else:
-            # Complex-valued function - use complex step
             return (f(z + h*1j) - f(z - h*1j)) / (2 * h * 1j)
     except Exception:
         return np.ones_like(z, dtype=complex)
 
-
-# ------------------------------ Complex class ------------------------------ #
 
 @dataclass
 class ConformalAnimator:
@@ -85,12 +75,11 @@ class ConformalAnimator:
     dpi: int = 160
     figsize: Tuple[float, float] = (6.5, 6.5)
     facecolor: str = "white"
-    
-    # --- Adaptive refinement ---
+
     adaptive: bool = True
     refinement_threshold: float = 1.5
     max_refinements: int = 5
-    derivative_h: float = 1e-6  # Step size for numerical differentiation
+    derivative_h: float = 1e-6  
     
     clip: float = 1e4
     _grid_h: List[np.ndarray] = field(default_factory=list, init=False)
@@ -125,7 +114,6 @@ class ConformalAnimator:
             refined_Z = [Z[0]]
             points_added = 0
             
-            # Compute derivatives at midpoints
             midpoints = (Z[:-1] + Z[1:]) / 2
             derivatives = _numerical_derivative(self.f, midpoints, self.derivative_h)
 
@@ -202,7 +190,6 @@ class ConformalAnimator:
                           color=self.grid_color or 'magenta')[0] for _ in self._grid_v]
         """
 
-        # Create colormaps for rainbow colors
         cmap_h = plt.cm.hsv(np.linspace(0, 1, len(self._grid_h)))
         cmap_v = plt.cm.hsv(np.linspace(0, 1, len(self._grid_v)))
 
@@ -237,8 +224,6 @@ class ConformalAnimator:
         plt.close(fig)
         return anim
 
-
-# ------------------------------ Real class ------------------------------ #
 
 @dataclass
 class LineAnimator:
@@ -284,7 +269,6 @@ class LineAnimator:
         ax.set_yticks([])
         ax.set_xlabel("Real line (positions)", color='white')
         
-        # Style the axis
         ax.spines['bottom'].set_color('white')
         ax.spines['left'].set_color('white')
         ax.spines['top'].set_visible(False)
@@ -294,13 +278,11 @@ class LineAnimator:
         return fig, ax
 
     def _morph(self, x: np.ndarray, t: float) -> np.ndarray:
-        """Interpolate between original and transformed positions"""
         a = _ease(t, self.easing)
         fx = self.f(x)
         return (1 - a) * x + a * fx
 
     def _maybe_save(self, anim: FuncAnimation, save_path: Optional[str], fps: int = 30) -> None:
-        """Helper method to save animation based on file extension"""
         if not save_path:
             return
         ext = save_path.lower().rsplit('.', 1)[-1]
@@ -318,18 +300,15 @@ class LineAnimator:
             warnings.warn("Unknown extension. Use .gif or .mp4")
 
     def animate_line(self, save_path: Optional[str] = None, fps: int = 30,
-                    show: bool = False, blit: bool = False) -> FuncAnimation:  # Changed blit to False
+                    show: bool = False, blit: bool = False) -> FuncAnimation: 
         fig, ax = self._setup_axis()
-        
-        # Draw baseline
+
         ax.plot([self.domain[0], self.domain[1]], [0, 0], lw=2, color='white')
-        
-        # Draw static original ticks
+
         for xi in self._x0:
             ax.plot([xi, xi], [-self.tick_height/2, self.tick_height/2], 
                    lw=self.tick_width, alpha=self.tick_alpha, color='lightgray')
         
-        # Create moving ticks
         moving_ticks = []
         for _ in self._x0:
 
@@ -338,12 +317,10 @@ class LineAnimator:
                          color='dodgerblue')
                          
             moving_ticks.append(ln)
-        
-        # Create moving points
+
         moving_pts = ax.scatter([], [], s=self.point_size, alpha=self.point_alpha, 
                                color='crimson', edgecolors='white', linewidth=0.5)
         
-        # Create title and subtitle using ax.text (not fig.text)
         title = ax.text(0.02, 0.95, r"Stretching of the line under $f(x)$", 
                        transform=ax.transAxes, ha="left", va="top",
                        fontsize=12, color='white', weight='bold')
@@ -371,12 +348,11 @@ class LineAnimator:
             subtitle.set_text(fr"Interpolation: $x_t = (1-t)\,x + t\,f(x)$     $t={t:.2f}$")
             return moving_ticks + [moving_pts, subtitle]
 
-        # Create eased time values
         t_values = np.linspace(0, 1, self.n_frames)
         t_ease = t_ease = 0.5 - 0.5 * np.cos(np.pi * t_values) 
 
         anim = FuncAnimation(
-            fig, update, frames=self.n_frames,  # Pass number of frames, not time values
+            fig, update, frames=self.n_frames,  
             init_func=init, blit=blit, interval=1000/fps
         )
         
